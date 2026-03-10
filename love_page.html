@@ -1,0 +1,286 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Love you my sister</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        background-color: #fffacd;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        min-height: 100vh;
+        font-family: Arial, sans-serif;
+        overflow: hidden;
+      }
+
+      canvas {
+        display: block;
+      }
+
+      .firework {
+        position: fixed;
+        pointer-events: none;
+      }
+
+      .message {
+        position: absolute;
+        font-size: 28px;
+        font-style: italic;
+        font-family: cursive;
+        color: #ff1493;
+        opacity: 0;
+      }
+    </style>
+  </head>
+  <body>
+    <canvas id="canvas"></canvas>
+    <div class="message" id="message">Love you barish!</div>
+
+    <script>
+      const canvas = document.getElementById("canvas");
+      const ctx = canvas.getContext("2d");
+
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+
+      let time = 0;
+      const startTime = Date.now();
+
+      // character drawing function
+      function drawHeart(x, y, size, lookDir, mouthState, armAngle) {
+        ctx.save();
+        ctx.translate(x, y);
+        // flip horizontally based on lookDir
+        ctx.scale(size * lookDir, size);
+
+        // body
+        ctx.fillStyle = "#ff1493";
+        ctx.beginPath();
+        ctx.moveTo(0, -30);
+        ctx.bezierCurveTo(-40, -60, -80, -40, -80, 0);
+        ctx.bezierCurveTo(-80, 40, 0, 90, 0, 90);
+        ctx.bezierCurveTo(0, 90, 80, 40, 80, 0);
+        ctx.bezierCurveTo(80, -40, 40, -60, 0, -30);
+        ctx.fill();
+
+        // eyes
+        ctx.fillStyle = "white";
+        ctx.beginPath();
+        ctx.arc(-25, -15, 15, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.beginPath();
+        ctx.arc(25, -15, 15, 0, Math.PI * 2);
+        ctx.fill();
+
+        // pupils
+        ctx.fillStyle = "black";
+        ctx.beginPath();
+        ctx.arc(-25 + lookDir * 8, -15, 8, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.beginPath();
+        ctx.arc(25 + lookDir * 8, -15, 8, 0, Math.PI * 2);
+        ctx.fill();
+
+        // eyebrows
+        ctx.strokeStyle = "#ff1493";
+        ctx.lineWidth = 3;
+        ctx.beginPath();
+        ctx.arc(-25, -35, 12, Math.PI * 0.7, Math.PI * 1.3);
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.arc(25, -35, 12, Math.PI * 0.7, Math.PI * 1.3);
+        ctx.stroke();
+
+        // mouth or kiss
+        if (mouthState === "kiss") {
+          ctx.fillStyle = "#ff1493";
+          ctx.beginPath();
+          ctx.moveTo(-10, 20);
+          ctx.quadraticCurveTo(0, 30, 10, 20);
+          ctx.quadraticCurveTo(0, 40, -10, 20);
+          ctx.fill();
+        } else if (mouthState === "smile") {
+          ctx.strokeStyle = "#333";
+          ctx.lineWidth = 2;
+          ctx.beginPath();
+          ctx.arc(0, 20, 20, 0, Math.PI, false);
+          ctx.stroke();
+        }
+
+        // arms (black)
+        ctx.strokeStyle = "black";
+        ctx.lineWidth = 8;
+        ctx.beginPath();
+        ctx.moveTo(50, 20);
+        const armX = 50 + Math.cos(armAngle) * 40;
+        const armY = 20 + Math.sin(armAngle) * 40;
+        ctx.lineTo(armX, armY);
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.moveTo(-50, 20);
+        const armX2 = -50 + Math.cos(-armAngle) * 40;
+        const armY2 = 20 + Math.sin(-armAngle) * 40;
+        ctx.lineTo(armX2, armY2);
+        ctx.stroke();
+
+        ctx.restore();
+      }
+
+      function createFirework(x, y) {
+        for (let i = 0; i < 30; i++) {
+          const angle = (Math.PI * 2 * i) / 30;
+          const velocity = 4 + Math.random() * 3;
+          particles.push({
+            x: x,
+            y: y,
+            vx: Math.cos(angle) * velocity,
+            vy: Math.sin(angle) * velocity,
+            life: 1,
+            color: ["#FFD700", "#FF6347", "#00CED1", "#FF1493", "#FFB6C1"][
+              Math.floor(Math.random() * 5)
+            ],
+          });
+        }
+      }
+
+      let particles = [];
+
+      function drawParticles() {
+        particles = particles.filter((p) => p.life > 0);
+
+        particles.forEach((p) => {
+          p.life -= 0.015;
+          p.x += p.vx;
+          p.y += p.vy;
+          p.vy += 0.15; // gravity
+
+          ctx.globalAlpha = p.life;
+          ctx.fillStyle = p.color;
+          ctx.beginPath();
+          ctx.arc(p.x, p.y, 5, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.globalAlpha = 1;
+        });
+      }
+
+      function animate() {
+        ctx.fillStyle = "#fffacd";
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+        time = (Date.now() - startTime) / 1000;
+
+        let heartX, heartY, lookDir, mouthState, armAngle, scale;
+
+        if (time < 2) {
+          // Shy entrance from left
+          heartX = canvas.width * 0.05 + time * canvas.width * 0.12;
+          heartY = canvas.height / 2;
+          scale = 0.6;
+        } else if (time < 3) {
+          // Looking around with slight shake
+          heartX = canvas.width * 0.3 + Math.sin((time - 2) * 6) * 10;
+          heartY = canvas.height / 2;
+          scale = 0.8;
+        } else if (time < 4) {
+          // Moving to center
+          heartX = canvas.width * 0.3 + (time - 3) * canvas.width * 0.15;
+          heartY = canvas.height / 2;
+          scale = 0.9;
+        } else if (time < 5) {
+          // Saying love you
+          heartX = canvas.width / 2;
+          heartY = canvas.height / 2;
+          scale = 1;
+
+          // Show message
+          const msgEl = document.getElementById("message");
+          msgEl.style.opacity = 1;
+          msgEl.style.left = canvas.width / 2 - 100 + "px";
+          msgEl.style.top = canvas.height / 2 + 150 + "px";
+
+          // Fireworks
+          if (Math.random() > 0.7) {
+            createFirework(
+              canvas.width / 2 + Math.random() * 300 - 150,
+              canvas.height / 2 - 100,
+            );
+          }
+        } else if (time < 13) {
+          // Holding position with fireworks
+          heartX = canvas.width / 2;
+          heartY = canvas.height / 2;
+          scale = 1;
+
+          if (Math.random() > 0.6) {
+            createFirework(
+              canvas.width / 2 + Math.random() * 400 - 200,
+              canvas.height / 2 - 200,
+            );
+          }
+        } else if (time < 16) {
+          // Hug animation - scale up and move
+          const hugProgress = (time - 13) / 3;
+          heartX = canvas.width / 2;
+          heartY = canvas.height / 2 - hugProgress * 100;
+          scale = 1 + hugProgress * 0.5;
+
+          const msgEl = document.getElementById("message");
+          msgEl.style.opacity = 0;
+        } else {
+          // Final hug state
+          heartX = canvas.width / 2;
+          heartY = canvas.height / 2 - 100;
+          scale = 1.5;
+        }
+
+        // determine look direction, mouth state and arm angle for drawing
+        if (time < 2) {
+          lookDir = -1;
+          mouthState = "smile";
+          armAngle = 0;
+        } else if (time < 3) {
+          // look left-right during looking around
+          lookDir = Math.sign(Math.sin((time - 2) * 2));
+          mouthState = "smile";
+          armAngle = Math.sin((time - 2) * Math.PI * 3) * 0.5;
+        } else if (time < 5) {
+          lookDir = 1;
+          mouthState = "smile";
+          armAngle = 0;
+        } else if (time < 13) {
+          lookDir = Math.sin(time) > 0 ? 1 : -1;
+          mouthState = "smile";
+          armAngle = Math.sin(time * 2) * 0.3;
+        } else if (time < 16) {
+          lookDir = 1;
+          mouthState = "kiss";
+          armAngle = Math.PI * 0.5 * ((time - 13) / 3);
+        } else {
+          lookDir = 1;
+          mouthState = "kiss";
+          armAngle = Math.PI * 0.8;
+        }
+
+        drawHeart(heartX, heartY, scale * 1.2, lookDir, mouthState, armAngle);
+        drawParticles();
+
+        requestAnimationFrame(animate);
+      }
+
+      window.addEventListener("resize", () => {
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+      });
+
+      animate();
+    </script>
+  </body>
+</html>

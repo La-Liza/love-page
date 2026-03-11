@@ -1,0 +1,191 @@
+<!doctype html>
+<html lang="ru">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Surprise for Nilushka</title>
+    <style>
+      body {
+        margin: 0;
+        padding: 0;
+        overflow: hidden;
+        background: #add8e6;
+        font-family: Arial, sans-serif;
+      }
+      canvas {
+        display: block;
+      }
+      .bigtext {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        font-size: 80px;
+        font-weight: bold;
+        color: #ff1493;
+        text-align: center;
+        display: none;
+      }
+    </style>
+  </head>
+  <body>
+    <canvas id="canvas"></canvas>
+    <div class="bigtext" id="final">LOVE YOU SIS</div>
+    <script>
+      const canvas = document.getElementById("canvas");
+      const ctx = canvas.getContext("2d");
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+
+      let time = 0;
+      const start = Date.now();
+      let floatingItems = [];
+
+      function drawCloud(x, y, r, color, showShadow) {
+        // shadow
+        if (showShadow) {
+          ctx.fillStyle = "rgba(0,0,0,0.2)";
+          ctx.beginPath();
+          ctx.ellipse(x, y + r + 20, r * 1.3, r * 0.4, 0, 0, Math.PI * 2);
+          ctx.fill();
+        }
+        // cloud body - bigger
+        ctx.fillStyle = color;
+        ctx.beginPath();
+        ctx.arc(x - r * 0.8, y, r, 0, Math.PI * 2);
+        ctx.arc(x, y - r * 0.6, r * 1.2, 0, Math.PI * 2);
+        ctx.arc(x + r * 0.8, y, r, 0, Math.PI * 2);
+        ctx.fill();
+
+        // eyes centered on body
+        ctx.fillStyle = "white";
+        ctx.beginPath();
+        ctx.arc(x - r * 0.5, y - r * 0.3, r * 0.35, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.beginPath();
+        ctx.arc(x + r * 0.5, y - r * 0.3, r * 0.35, 0, Math.PI * 2);
+        ctx.fill();
+        // pupils
+        ctx.fillStyle = "black";
+        ctx.beginPath();
+        ctx.arc(x - r * 0.5, y - r * 0.3, r * 0.15, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.beginPath();
+        ctx.arc(x + r * 0.5, y - r * 0.3, r * 0.15, 0, Math.PI * 2);
+        ctx.fill();
+        // smile centered
+        ctx.strokeStyle = "black";
+        ctx.lineWidth = 5;
+        ctx.beginPath();
+        ctx.arc(x, y + r * 0.15, r * 0.35, 0, Math.PI);
+        ctx.stroke();
+      }
+
+      function animate() {
+        time = (Date.now() - start) / 1000;
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+        // Phase 1: cloud enters from top
+        if (time < 2) {
+          const cx = canvas.width / 2;
+          const cy = canvas.height / 5 + time * (canvas.height / 3);
+          const r = 100 + Math.sin(time * 5) * 5;
+          drawCloud(cx, cy, r, "white", false);
+        }
+        // Phase 2: cloud at center with pulsing animation and text
+        else if (time < 6) {
+          const cx = canvas.width / 2;
+          const cy = canvas.height / 2;
+          const r = 100 + Math.sin((time - 2) * 8) * 15;
+          drawCloud(cx, cy, r, "white", false);
+          ctx.fillStyle = "black";
+          ctx.font = "bold 40px cursive";
+          ctx.textAlign = "center";
+          ctx.fillText("НИЛУШКА ТЫ ЗНАЕШ ЧТО??????", cx, cy + 180);
+        }
+        // Phase 3: color change with shadow (4 seconds)
+        else if (time < 10) {
+          const cx = canvas.width / 2;
+          const cy = canvas.height / 2;
+          const r = 100 + Math.sin((time - 2) * 8) * 15;
+          const colors = [
+            "#FF6B6B",
+            "#4ECDC4",
+            "#45B7D1",
+            "#FFA07A",
+            "#98D8C8",
+          ];
+          const idx = Math.floor((time - 6) * 4) % colors.length;
+          drawCloud(cx, cy, r, colors[idx], true);
+        }
+        // Phase 4: explosion
+        else if (time < 10.5) {
+          document.body.style.background = "#FFFF00";
+        }
+
+        // Phase 5: poop emoji appears with delayed text (3 seconds delay)
+        if (time > 10) {
+          ctx.font = "150px Arial";
+          ctx.textAlign = "center";
+          ctx.fillText("💩", canvas.width / 2, canvas.height / 2 + 60);
+
+          // Text appears 3 seconds after poop
+          if (time > 13) {
+            ctx.fillStyle = "black";
+            ctx.font = "bold 38px cursive";
+            ctx.textAlign = "center";
+            ctx.fillText(
+              "нилушка какашка туалетная бумашка",
+              canvas.width / 2,
+              canvas.height / 2 - 100,
+            );
+          }
+
+          // spawn phone smile emojis randomly
+          if (Math.random() > 0.75) {
+            floatingItems.push({
+              emoji: "😊",
+              x: Math.random() * canvas.width,
+              y: Math.random() * canvas.height,
+            });
+          }
+        }
+
+        // draw floating smile items
+        floatingItems.forEach((item) => {
+          ctx.font = "50px Arial";
+          ctx.textAlign = "center";
+          ctx.fillText(item.emoji, item.x, item.y);
+        });
+
+        // Phase 6: everything disappears, final screen with pink bg and random hearts
+        if (time > 18) {
+          document.body.style.background = "#FFB6C1";
+          ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+          // random hearts background
+          ctx.font = "60px Arial";
+          ctx.textAlign = "center";
+          for (let i = 0; i < 20; i++) {
+            ctx.fillText(
+              "❤️",
+              Math.random() * canvas.width,
+              Math.random() * canvas.height,
+            );
+          }
+
+          // show final text
+          document.getElementById("final").style.display = "block";
+        }
+
+        if (time < 26) requestAnimationFrame(animate);
+      }
+
+      animate();
+      window.addEventListener("resize", () => {
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+      });
+    </script>
+  </body>
+</html>
